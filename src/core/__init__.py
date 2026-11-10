@@ -1,0 +1,1 @@
+"""Project Aura 2.0 core module - configuration, constants, and exceptions."""

@@ -1,0 +1,1 @@
+"""Project Aura 2.0 computer vision module."""
