@@ -1,0 +1,360 @@
+#!/usr/bin/env python3
+"""Generate notebook 01: Environment Setup (updated)."""
+
+import json
+import os
+
+NOTEBOOKS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "notebooks")
+NOTEBOOKS_DIR = os.path.abspath(NOTEBOOKS_DIR)
+
+
+def md(lines):
+    return {"cell_type": "markdown", "metadata": {}, "source": lines}
+
+
+def code(lines):
+    return {
+        "cell_type": "code",
+        "execution_count": None,
+        "metadata": {},
+        "outputs": [],
+        "source": lines,
+    }
+
+
+cells = []
+
+# Cell 1: Markdown header
+cells.append(md([
+    "# Project Aura 2.0 - Notebook 01: Environment Setup",
+    "",
+    "This notebook initializes the Google Colab environment for Project Aura 2.0:",
+    "- Installs required Python dependencies (ultralytics, mediapipe, opencv-python-headless,",
+    "  numpy, pillow, tqdm, torch, torchvision, tensorflow)",
+    "- Avoids unnecessarily reinstalling already-compatible PyTorch and TensorFlow versions",
+    "- Clones the GitHub repository if not already present",
+    "- Adds /content/project-aura to sys.path before importing src",
+    "- Detects and reports Colab, Python, GPU, CUDA, and installed libraries",
+    "- Verifies imports from src.core.config and src.core.constants",
+    "- Verifies load_config() reports runtime_type and gpu_enabled correctly",
+    "- Prints a clear environment verification summary",
+    "",
+    "Safe to rerun: all steps are idempotent.",
+]))
+
+# Cell 2: Install dependencies (check before installing to avoid unnecessary reinstalls)
+cells.append(code([
+    "# ==========================================================================",
+    "# Step 0: Install required dependencies",
+    "# ==========================================================================",
+    "",
+    "import subprocess",
+    "import sys",
+    "",
+    "",
+    "def _is_installed(package):",
+    "    \"\"\"Check if a package is already installed.\"\"\"",
+    "    try:",
+    "        __import__(package)",
+    "        return True",
+    "    except ImportError:",
+    "        return False",
+    "",
+    "",
+    "REQUIRED_PACKAGES = [",
+    "    \"numpy\",",
+    "    \"PIL\",          # pillow",
+    "    \"tqdm\",",
+    "    \"ultralytics\",",
+    "    \"mediapipe\",",
+    "    \"cv2\",          # opencv-python-headless",
+    "]",
+    "",
+    "# Install core packages that are missing",
+    "missing = [p for p in REQUIRED_PACKAGES if not _is_installed(p)]",
+    "if missing:",
+    "    print(f\"Installing missing packages: {missing}\")",
+    "    !pip install --quiet {' '.join(missing)}",
+    "else:",
+    "    print(\"All core packages already installed.\")",
+    "",
+    "",
+    "# PyTorch and torchvision - check version compatibility before installing",
+    "TORCH_INSTALLED = _is_installed(\"torch\")",
+    "TORCHVISION_INSTALLED = _is_installed(\"torchvision\")",
+    "",
+    "if not TORCH_INSTALLED or not TORCHVISION_INSTALLED:",
+    "    print(\"Installing PyTorch and torchvision (CPU build)...\")",
+    "    !pip install --quiet torch torchvision --index-url https://download.pytorch.org/whl/cpu",
+    "else:",
+    "    import torch",
+    "    print(f\"PyTorch already installed: {torch.__version__} - skipping reinstall.\")",
+    "",
+    "",
+    "# TensorFlow - check if already installed before installing",
+    "TF_INSTALLED = _is_installed(\"tensorflow\")",
+    "",
+    "if not TF_INSTALLED:",
+    "    print(\"Installing TensorFlow...\")",
+    "    !pip install --quiet tensorflow",
+    "else:",
+    "    import tensorflow as tf",
+    "    print(f\"TensorFlow already installed: {tf.__version__} - skipping reinstall.\")",
+    "",
+    "",
+    "print(\"Dependency check complete.\")",
+]))
+
+# Cell 3: Clone repo (before sys.path and imports)
+cells.append(code([
+    "# ==========================================================================",
+    "# Step 1: Clone the GitHub repository if not already present",
+    "# ==========================================================================",
+    "",
+    "import os",
+    "import sys",
+    "",
+    'PROJECT_DIR = "/content/project-aura"',
+    'REPO_URL = "https://github.com/Sineth7077/project-aura.git"',
+    "",
+    "if not os.path.exists(PROJECT_DIR):",
+    '    print(f"Cloning {REPO_URL} ...")',
+    "    !git clone {REPO_URL} {PROJECT_DIR}",
+    "else:",
+    '    print(f"Project directory already exists: {PROJECT_DIR}")',
+    "    !git -C {PROJECT_DIR} fetch origin",
+    "    !git -C {PROJECT_DIR} checkout main",
+    "    !git -C {PROJECT_DIR} pull origin main",
+    "",
+    'print("Repository ready")',
+]))
+
+# Cell 4: Add to sys.path
+cells.append(code([
+    "# ==========================================================================",
+    "# Step 2: Add project to Python path",
+    "# ==========================================================================",
+    "",
+    "if PROJECT_DIR not in sys.path:",
+    "    sys.path.insert(0, PROJECT_DIR)",
+    "",
+    'print(f"Python path updated: {PROJECT_DIR} in sys.path = {PROJECT_DIR in sys.path}")',
+]))
+
+# Cell 5: Detect environment
+cells.append(code([
+    "# ==========================================================================",
+    "# Step 3: Detect and report environment",
+    "# ==========================================================================",
+    "",
+    "import platform",
+    "import importlib",
+    "",
+    "try:",
+    "    from google.colab import drive as _gdrive",
+    "    IN_COLAB = True",
+    "except ImportError:",
+    "    IN_COLAB = False",
+    "",
+    'COLAB_GPU = os.getenv("COLAB_GPU", "").lower() in ("true", "1")',
+    'COLAB_RELEASE_TAG = os.getenv("COLAB_RELEASE_TAG", "")',
+    "",
+    "PYTHON_VERSION = sys.version",
+    "",
+    "# PyTorch GPU detection",
+    "TORCH_AVAILABLE = False",
+    "TORCH_VERSION = None",
+    "TORCH_CUDA_AVAILABLE = False",
+    "TORCH_CUDA_DEVICE_NAME = None",
+    "try:",
+    "    import torch",
+    "    TORCH_AVAILABLE = True",
+    "    TORCH_VERSION = torch.__version__",
+    "    TORCH_CUDA_AVAILABLE = bool(torch.cuda.is_available())",
+    "    if TORCH_CUDA_AVAILABLE:",
+    "        TORCH_CUDA_DEVICE_NAME = torch.cuda.get_device_name(0)",
+    "except ImportError:",
+    "    pass",
+    "",
+    "# TensorFlow GPU detection",
+    "TENSORFLOW_AVAILABLE = False",
+    "TENSORFLOW_VERSION = None",
+    "TF_GPU_AVAILABLE = False",
+    "try:",
+    "    import tensorflow as tf",
+    "    TENSORFLOW_AVAILABLE = True",
+    "    TENSORFLOW_VERSION = tf.__version__",
+    "    TF_GPU_AVAILABLE = len(tf.config.list_physical_devices('GPU')) > 0",
+    "except ImportError:",
+    "    pass",
+    "",
+    "# Other library versions",
+    "def _version(module_name):",
+    "    try:",
+    "        mod = importlib.import_module(module_name)",
+    '        return getattr(mod, "__version__", "unknown")',
+    "    except ImportError:",
+    "        return None",
+    "",
+    "NUMPY_VERSION = _version('numpy')",
+    "PILLOW_VERSION = _version('PIL')",
+    "MEDIAPIPE_VERSION = _version('mediapipe')",
+    "OPENCV_VERSION = _version('cv2')",
+    "ULTRALYTICS_VERSION = _version('ultralytics')",
+    "TORCHVISION_VERSION = _version('torchvision')",
+    "",
+    'print("=== Environment Detection ===")',
+    'print(f"Running in Colab: {IN_COLAB}")',
+    'print(f"COLAB_GPU env var: {COLAB_GPU}")',
+    'print(f"COLAB_RELEASE_TAG env var: {COLAB_RELEASE_TAG or "(not set)"}")',
+    'print(f"Python version: {PYTHON_VERSION.split()[0]}")',
+    'print(f"Platform: {platform.platform()}")',
+    'print(f"PyTorch available: {TORCH_AVAILABLE} (v{TORCH_VERSION})")',
+    'print(f"PyTorch CUDA available: {TORCH_CUDA_AVAILABLE}")',
+    "if TORCH_CUDA_DEVICE_NAME:",
+    '    print(f"  GPU device: {TORCH_CUDA_DEVICE_NAME}")',
+    'print(f"TensorFlow available: {TENSORFLOW_AVAILABLE} (v{TENSORFLOW_VERSION})")',
+    'print(f"TensorFlow GPU available: {TF_GPU_AVAILABLE}")',
+    'print(f"NumPy: {NUMPY_VERSION}")',
+    'print(f"Pillow: {PILLOW_VERSION}")',
+    'print(f"MediaPipe: {MEDIAPIPE_VERSION}")',
+    'print(f"OpenCV: {OPENCV_VERSION}")',
+    'print(f"Ultralytics: {ULTRALYTICS_VERSION}")',
+    'print(f"TorchVision: {TORCHVISION_VERSION}")',
+]))
+
+# Cell 6: Verify imports from src
+cells.append(code([
+    "# ==========================================================================",
+    "# Step 4: Verify imports from src.core.config and src.core.constants",
+    "# ==========================================================================",
+    "",
+    "from src.core.config import (",
+    "    ColabConfig,",
+    "    AuraConfig,",
+    "    load_config,",
+    "    detect_gpu,",
+    "    detect_tpu,",
+    ")",
+    "from src.core.constants import (",
+    "    PROJECT_NAME,",
+    "    PROJECT_VERSION,",
+    "    SUPPORTED_VISION_MODELS,",
+    ")",
+    "",
+    "config = load_config()",
+    "",
+    'print("\\n=== Import Verification ===")',
+    'print("src.core.config: OK")',
+    'print("src.core.constants: OK")',
+    'print(f"Project: {PROJECT_NAME} v{PROJECT_VERSION}")',
+    'print(f"Supported vision models: {SUPPORTED_VISION_MODELS}")',
+    'print(f"Config loaded: debug={config.debug}, log_level={config.log_level}")',
+    'print(f"Colab runtime_type: {config.colab.runtime_type}")',
+    'print(f"Colab gpu_enabled: {config.colab.gpu_enabled}")',
+    'print(f"Colab tpu_enabled: {config.colab.tpu_enabled}")',
+]))
+
+# Cell 7: Verify config reports correctly on Colab
+cells.append(code([
+    "# ==========================================================================",
+    "# Step 5: Verify load_config() reports correctly on Colab",
+    "# ==========================================================================",
+    "",
+    "print(\"\\n=== Colab Configuration Verification ===\")",
+    'print(f"IN_COLAB: {IN_COLAB}")',
+    'print(f"config.colab.runtime_type: {config.colab.runtime_type}")',
+    'print(f"config.colab.gpu_enabled: {config.colab.gpu_enabled}")',
+    'print(f"config.detect_gpu(): {detect_gpu()}")',
+    "",
+    "# On Colab with T4 GPU, runtime_type should be 'colab' and gpu_enabled should be True",
+    "if IN_COLAB:",
+    "    expected_runtime = \"colab\"",
+    "    expected_gpu = TORCH_CUDA_AVAILABLE or TF_GPU_AVAILABLE",
+    "    runtime_ok = config.colab.runtime_type == expected_runtime",
+    "    gpu_ok = config.colab.gpu_enabled == expected_gpu",
+    '    print(f"Expected runtime_type: {expected_runtime} - {"OK" if runtime_ok else "MISMATCH"}")',
+    '    print(f"Expected gpu_enabled: {expected_gpu} - {"OK" if gpu_ok else "MISMATCH"}")',
+    "",
+    "    if runtime_ok and gpu_ok:",
+    '        print("Configuration verification PASSED for Colab environment.")',
+    "    else:",
+    '        print("Configuration verification FAILED - see mismatches above.")',
+    "else:",
+    '    print("Not running in Colab - configuration reflects local/production environment.")',
+]))
+
+# Cell 8: Summary
+cells.append(code([
+    "# ==========================================================================",
+    "# Step 6: Print environment verification summary",
+    "# ==========================================================================",
+    "",
+    'print("\\n" + "=" * 60)',
+    'print("PROJECT AURA 2.0 - ENVIRONMENT VERIFICATION SUMMARY")',
+    'print("=" * 60)',
+    'print(f"Runtime: {"Google Colab" if IN_COLAB else "Local/Production"}")',
+    'print(f"Python: {PYTHON_VERSION.split()[0]}")',
+    'print(f"PyTorch: {TORCH_VERSION or "not installed"} (CUDA: {TORCH_CUDA_AVAILABLE})")',
+    'print(f"TensorFlow: {TENSORFLOW_VERSION or "not installed"} (GPU: {TF_GPU_AVAILABLE})")',
+    'print(f"GPU detected by config.detect_gpu(): {detect_gpu()}")',
+    'print(f"Config gpu_enabled: {config.colab.gpu_enabled}")',
+    'print(f"NumPy: {NUMPY_VERSION}")',
+    'print(f"Pillow: {PILLOW_VERSION}")',
+    'print(f"MediaPipe: {MEDIAPIPE_VERSION}")',
+    'print(f"OpenCV: {OPENCV_VERSION}")',
+    'print(f"Ultralytics: {ULTRALYTICS_VERSION}")',
+    'print(f"TorchVision: {TORCHVISION_VERSION}")',
+    'print(f"Project directory: {PROJECT_DIR}")',
+    'print(f"Project in sys.path: {PROJECT_DIR in sys.path}")',
+    'print("=" * 60)',
+    "",
+    "if IN_COLAB and not TORCH_CUDA_AVAILABLE and not TF_GPU_AVAILABLE:",
+    '    print("\\nNOTE: No GPU detected. Notebooks will run on CPU.")',
+    "elif IN_COLAB and (TORCH_CUDA_AVAILABLE or TF_GPU_AVAILABLE):",
+    '    print("\\nGPU acceleration is available.")',
+    "",
+    'print("\\nNotebook 01 complete - Environment ready for Project Aura 2.0")',
+]))
+
+# Cell 9: Mount Google Drive
+cells.append(code([
+    "# ==========================================================================",
+    "# Step 7: Optional - Mount Google Drive",
+    "# ==========================================================================",
+    "",
+    'if os.getenv("MOUNT_GDRIVE", "false").lower() == "true" and IN_COLAB:',
+    "    try:",
+    "        from google.colab import drive",
+    "        drive.mount('/content/drive')",
+    '        print("Google Drive mounted at /content/drive")',
+    "    except ImportError:",
+    '        print("google.colab not available")',
+    "else:",
+    '    print("Google Drive mount skipped (set MOUNT_GDRIVE=true to enable)")',
+]))
+
+nb = {
+    "cells": cells,
+    "metadata": {
+        "kernelspec": {
+            "display_name": "Python 3",
+            "language": "python",
+            "name": "python3"
+        },
+        "language_info": {
+            "name": "python",
+            "version": "3.11.9"
+        }
+    },
+    "nbformat": 4,
+    "nbformat_minor": 0
+}
+
+path = os.path.join(NOTEBOOKS_DIR, "01_environment_setup.ipynb")
+with open(path, "w") as f:
+    json.dump(nb, f, indent=1)
+print(f"Created: {path}")
+
+
+
