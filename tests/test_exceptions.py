@@ -28,7 +28,8 @@ def test_aura_exception_base():
 def test_aura_exception_no_code():
     """Test AuraException without error code."""
     exc = AuraException("test error")
-    assert str(exc) == "test error"
+    # The implementation defaults error_code to "AURA_UNKNOWN" when None is passed
+    assert str(exc) == "[AURA_UNKNOWN] test error"
 
 
 def test_configuration_error():

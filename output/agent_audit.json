@@ -1,0 +1,51 @@
+[
+  {
+    "request_id": "6455b4eb-22a8-4f7d-be34-f943c2821c7d",
+    "action": "pause",
+    "requesting_component": "test",
+    "timestamp": "2026-11-12T07:38:36.460451+00:00",
+    "decision": "granted",
+    "reason": "Action 'pause' permitted"
+  },
+  {
+    "request_id": "ca340443-2ae3-4750-8ee2-9afeed23b12a",
+    "action": "save_screenshot",
+    "requesting_component": "test",
+    "timestamp": "2026-11-12T07:38:36.461441+00:00",
+    "decision": "pending_confirmation",
+    "reason": "Action 'save_screenshot' is sensitive and requires explicit user confirmation"
+  },
+  {
+    "request_id": "a041d20e-5e6b-49df-ae19-d194f49392c8",
+    "action": "save_screenshot",
+    "requesting_component": "test",
+    "timestamp": "2026-11-12T07:38:36.461441+00:00",
+    "decision": "granted",
+    "reason": "Action 'save_screenshot' approved with user confirmation",
+    "confirmed_by_user": true
+  },
+  {
+    "request_id": "84db3bc1-41ce-4dfa-a36c-c9d65e4ad824",
+    "action": "dangerous_action",
+    "requesting_component": "test",
+    "timestamp": "2026-11-12T07:38:36.461441+00:00",
+    "decision": "denied",
+    "reason": "Action 'dangerous_action' is not allowlisted"
+  },
+  {
+    "request_id": "92b8ad9f-e773-4132-bd53-23ab9107b97c",
+    "action": "pause",
+    "requesting_component": "test",
+    "timestamp": "2026-11-12T07:38:36.469539+00:00",
+    "decision": "granted",
+    "reason": "Action 'pause' permitted"
+  },
+  {
+    "request_id": "29cc0fb4-cfb2-4d34-bc69-020eff003319",
+    "action": "pause",
+    "requesting_component": "decision_engine",
+    "timestamp": "2026-11-12T07:38:36.489366+00:00",
+    "decision": "granted",
+    "reason": "Action 'pause' permitted"
+  }
+]

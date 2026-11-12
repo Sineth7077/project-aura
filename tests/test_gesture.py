@@ -7,52 +7,79 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import numpy as np
 
-from src.agents.gesture import GestureRecognizer, GestureResult
+from src.vision.gesture_recognizer import GestureRecognizer, GesturePrediction
 
 
-def test_gesture_result_to_dict():
-    """Test GestureResult serialization."""
-    result = GestureResult(
-        gesture_name="open_palm",
+def test_gesture_prediction_to_dict():
+    """Test GesturePrediction serialization."""
+    result = GesturePrediction(
+        gesture="OPEN_PALM",
         confidence=0.95,
-        bounding_box=[10, 20, 100, 100],
+        handedness="Right",
         landmarks=[(0.5, 0.5, 0.0)],
     )
     d = result.to_dict()
-    assert d["gesture_name"] == "open_palm"
+    assert d["gesture"] == "OPEN_PALM"
     assert d["confidence"] == 0.95
-    assert d["bounding_box"] == [10, 20, 100, 100]
+    assert d["handedness"] == "Right"
 
 
 def test_gesture_recognizer_creation():
     """Test GestureRecognizer instantiation."""
     recognizer = GestureRecognizer()
     assert recognizer.confidence_threshold == 0.7
-    assert recognizer.max_num_hands == 2
-    assert recognizer._detector is None
-
-
-def test_gesture_recognizer_detect_fallback():
-    """Test fallback detection with a blank image."""
-    recognizer = GestureRecognizer()
-    image = np.zeros((100, 100, 3), dtype=np.uint8)
-    results = recognizer.detect(image)
-    # Blank image should produce no gestures in fallback mode
-    assert isinstance(results, list)
+    assert recognizer.pinch_distance_threshold == 0.05
 
 
 def test_classify_gesture_fist():
     """Test fist classification (all fingers closed)."""
-    # All fingertips below MCPs (y increases downward)
-    landmarks = [(0.5, 0.9)] * 21  # all low in image (high y)
+    # All fingertips below MCPs (y increases downward in image coordinates)
+    # Realistic fist geometry: fingertips lower than their corresponding MCP joints
+    landmarks = [(0.5, 0.5, 0.0)] * 21
+    # Set fingertips (indices 4, 8, 12, 16, 20) to be lower (higher y) than MCPs
+    landmarks[4] = (0.3, 0.9, 0.0)  # thumb tip (far left to avoid pinch)
+    landmarks[8] = (0.5, 0.9, 0.0)  # index tip
+    landmarks[12] = (0.5, 0.9, 0.0)  # middle tip
+    landmarks[16] = (0.5, 0.9, 0.0)  # ring tip
+    landmarks[20] = (0.5, 0.9, 0.0)  # pinky tip
+    # Set MCPs higher (lower y)
+    landmarks[2] = (0.3, 0.5, 0.0)  # thumb MCP
+    landmarks[5] = (0.5, 0.5, 0.0)  # index MCP
+    landmarks[9] = (0.5, 0.5, 0.0)  # middle MCP
+    landmarks[13] = (0.5, 0.5, 0.0)  # ring MCP
+    landmarks[17] = (0.5, 0.5, 0.0)  # pinky MCP
+    # Set intermediate joints
+    landmarks[3] = (0.3, 0.7, 0.0)  # thumb IP
+    landmarks[7] = (0.5, 0.7, 0.0)  # index PIP
+    
     recognizer = GestureRecognizer()
-    name, conf = recognizer._classify_gesture(landmarks)
-    assert name == "fist"
+    prediction = recognizer.recognize(landmarks, handedness="Right")
+    assert prediction.gesture == "FIST"
+    assert prediction.confidence >= 0.7
 
 
 def test_classify_gesture_open_palm():
     """Test open palm classification (all fingers extended)."""
-    landmarks = [(0.5, 0.1)] * 21  # all high in image (low y)
+    # Realistic open palm geometry: fingertips above MCP joints
+    landmarks = [(0.5, 0.5, 0.0)] * 21
+    # Set fingertips (indices 4, 8, 12, 16, 20) to be higher (lower y) than MCPs
+    # For right hand, thumb extended means tip[0] > IP[0]
+    landmarks[4] = (0.7, 0.1, 0.0)  # thumb tip (right of IP for extension)
+    landmarks[8] = (0.5, 0.1, 0.0)  # index tip
+    landmarks[12] = (0.5, 0.1, 0.0)  # middle tip
+    landmarks[16] = (0.5, 0.1, 0.0)  # ring tip
+    landmarks[20] = (0.5, 0.1, 0.0)  # pinky tip
+    # Set MCPs lower (higher y)
+    landmarks[2] = (0.5, 0.5, 0.0)  # thumb MCP
+    landmarks[5] = (0.5, 0.5, 0.0)  # index MCP
+    landmarks[9] = (0.5, 0.5, 0.0)  # middle MCP
+    landmarks[13] = (0.5, 0.5, 0.0)  # ring MCP
+    landmarks[17] = (0.5, 0.5, 0.0)  # pinky MCP
+    # Set intermediate joints
+    landmarks[3] = (0.6, 0.3, 0.0)  # thumb IP (left of tip for right hand)
+    landmarks[7] = (0.5, 0.3, 0.0)  # index PIP
+    
     recognizer = GestureRecognizer()
-    name, conf = recognizer._classify_gesture(landmarks)
-    assert name == "open_palm"
+    prediction = recognizer.recognize(landmarks, handedness="Right")
+    assert prediction.gesture == "OPEN_PALM"
+    assert prediction.confidence >= 0.7

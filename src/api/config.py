@@ -11,6 +11,23 @@ import os
 from dataclasses import dataclass, field
 
 
+def _default_cors_origins() -> list[str]:
+    """Default CORS origins from environment variable."""
+    env_value = os.getenv("API_CORS_ORIGINS", "http://localhost:8000,http://localhost:3000")
+    if not env_value:
+        return []
+    
+    origins = [o.strip() for o in env_value.split(",") if o.strip()]
+    
+    # In production, reject wildcard
+    if os.getenv("ENVIRONMENT", "development") == "production":
+        origins = [o for o in origins if o != "*"]
+        if not origins:
+            return []
+    
+    return origins
+
+
 @dataclass
 class APIConfig:
     """FastAPI application configuration.
@@ -32,11 +49,7 @@ class APIConfig:
     host: str = field(default_factory=lambda: os.getenv("API_HOST", "0.0.0.0"))
     port: int = field(default_factory=lambda: int(os.getenv("API_PORT", "8000")))
     workers: int = field(default_factory=lambda: int(os.getenv("API_WORKERS", "1")))
-    cors_origins: list[str] = field(
-        default_factory=lambda: os.getenv(
-            "API_CORS_ORIGINS", "*"
-        ).split(",")
-    )
+    cors_origins: list[str] = field(default_factory=_default_cors_origins)
     max_image_size_mb: float = field(
         default_factory=lambda: float(
             os.getenv("API_MAX_IMAGE_SIZE_MB", "10")

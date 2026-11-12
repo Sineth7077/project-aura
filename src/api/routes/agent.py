@@ -25,7 +25,7 @@ agent_service: AgentService = AgentService()
 
 @router.post("/agent/decide", response_model=AgentDecideResponse)
 async def agent_decide(request: AgentDecideRequest) -> AgentDecideResponse:
-    """Accept a validated observation and return a decision trace."""
+    """Accept a validated observation and return a complete decision trace."""
     request_data = {
         "observation_source": request.observation_source,
         "observation_type": request.observation_type,
@@ -40,6 +40,12 @@ async def agent_decide(request: AgentDecideRequest) -> AgentDecideResponse:
         confidence=result["confidence"],
         explanation=result["explanation"],
         permission_status=result["permission_status"],
+        permission_reason=result.get("permission_reason"),
+        execution_status=result["execution_status"],
+        verification_status=result["verification_status"],
+        timestamp=result["timestamp"],
+        execution_result=result.get("execution_result"),
+        verification_record=result.get("verification_record"),
     )
 
 
@@ -49,7 +55,7 @@ async def gesture_stream(websocket: WebSocket) -> None:
 
     Protocol:
     - Client sends JSON: {"observation_type": "gesture", "data": {"gesture": "OPEN_PALM"}, "confidence": 0.9}
-    - Server responds with structured decision JSON.
+    - Server responds with structured decision JSON including complete pipeline status.
     - All actions go through permission checks and verification.
     """
     await websocket.accept()
@@ -65,7 +71,7 @@ async def gesture_stream(websocket: WebSocket) -> None:
                 }))
                 continue
 
-            # Process through the agent pipeline
+            # Process through the complete agent pipeline
             result = agent_service.decide({
                 "observation_source": "websocket",
                 "observation_type": payload.get("observation_type", "gesture"),
@@ -79,6 +85,10 @@ async def gesture_stream(websocket: WebSocket) -> None:
                 "confidence": result["confidence"],
                 "explanation": result["explanation"],
                 "permission_status": result["permission_status"],
+                "permission_reason": result.get("permission_reason"),
+                "execution_status": result["execution_status"],
+                "verification_status": result["verification_status"],
+                "timestamp": result["timestamp"],
             }
             await websocket.send_text(json.dumps(response))
     except WebSocketDisconnect:

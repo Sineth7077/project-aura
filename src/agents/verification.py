@@ -5,6 +5,16 @@ completed by comparing expected and actual state. It records success or
 failure and prevents repeated execution of already-verified actions.
 
 This component never reports success without a verifiable result.
+
+Verification statuses are separate from execution statuses:
+- DECISION_CREATED: Decision generated, not yet executed
+- PERMISSION_GRANTED: Permission approved for execution
+- PERMISSION_DENIED: Permission rejected
+- EXECUTION_SUCCEEDED: Action handler completed without error
+- EXECUTION_FAILED: Action handler raised an exception
+- VERIFICATION_SUCCEEDED: Independent verification confirmed success
+- VERIFICATION_FAILED: Independent verification detected failure
+- VERIFICATION_UNAVAILABLE: No verification mechanism exists for this action
 """
 
 from __future__ import annotations
@@ -13,8 +23,21 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
 from uuid import uuid4
 from datetime import datetime, timezone
+from enum import Enum
 
 from src.agents.executor import ExecutionResult
+
+
+class VerificationStatus(str, Enum):
+    """Explicit verification status values."""
+    DECISION_CREATED = "decision_created"
+    PERMISSION_GRANTED = "permission_granted"
+    PERMISSION_DENIED = "permission_denied"
+    EXECUTION_SUCCEEDED = "execution_succeeded"
+    EXECUTION_FAILED = "execution_failed"
+    VERIFICATION_SUCCEEDED = "verification_succeeded"
+    VERIFICATION_FAILED = "verification_failed"
+    VERIFICATION_UNAVAILABLE = "verification_unavailable"
 
 
 @dataclass
@@ -25,6 +48,7 @@ class VerificationRecord:
         verification_id: Unique UUID4 identifier.
         execution_id: ID of the execution being verified.
         action: Canonical action name.
+        verification_status: Explicit verification status from VerificationStatus enum.
         verified: Whether the action was independently verified as successful.
         expected_state: The state expected after execution.
         actual_state: The state observed after execution.
@@ -36,6 +60,7 @@ class VerificationRecord:
     verification_id: str = field(default_factory=lambda: str(uuid4()))
     execution_id: str = ""
     action: str = ""
+    verification_status: str = VerificationStatus.VERIFICATION_UNAVAILABLE.value
     verified: bool = False
     expected_state: Optional[dict[str, Any]] = None
     actual_state: Optional[dict[str, Any]] = None
@@ -51,6 +76,7 @@ class VerificationRecord:
             "verification_id": self.verification_id,
             "execution_id": self.execution_id,
             "action": self.action,
+            "verification_status": self.verification_status,
             "verified": self.verified,
             "expected_state": self.expected_state,
             "actual_state": self.actual_state,
@@ -110,8 +136,8 @@ class VerificationSystem:
                 to the execution's data).
 
         Returns:
-            A :class:`VerificationRecord` with verified=True only when
-            independent evidence confirms success.
+            A :class:`VerificationRecord` with verification_status indicating
+            the outcome. verified=True only when independent evidence confirms success.
 
         Raises:
             ValueError: If the same execution_id has already been verified
@@ -122,43 +148,55 @@ class VerificationSystem:
                 f"Execution '{execution.execution_id}' has already been verified"
             )
 
-        # Determine match: custom check > state comparison > execution flag.
+        # Determine verification status based on available evidence
+        verification_status = VerificationStatus.VERIFICATION_UNAVAILABLE
         verified = False
         match = False
         message_parts: list[str] = []
 
-        if self._custom_check is not None:
-            try:
-                verified = bool(self._custom_check(execution, expected_state or {}))
-                match = verified
-                message_parts.append("custom check passed" if verified else "custom check failed")
-            except Exception as exc:
-                verified = False
-                match = False
-                message_parts.append(f"custom check error: {exc}")
-
-        if not message_parts:
-            if expected_state is not None:
-                actual = actual_state if actual_state is not None else (execution.data or {})
-                match = self._states_match(expected_state, actual)
-                verified = execution.succeeded and match
-                message_parts.append("state matched" if match else "state mismatch")
-            else:
-                # No independent state source: trust execution result only.
-                verified = execution.succeeded
-                match = execution.succeeded
-                message_parts.append(
-                    "execution succeeded" if execution.succeeded else "execution failed"
-                )
-
-        if execution.error:
+        # If execution failed, verification is also failed
+        if not execution.succeeded:
+            verification_status = VerificationStatus.EXECUTION_FAILED
             verified = False
             match = False
-            message_parts.append(f"error: {execution.error}")
+            message_parts.append(f"execution failed: {execution.error or 'unknown error'}")
+        else:
+            # Execution succeeded - now check verification
+            if self._custom_check is not None:
+                try:
+                    verified = bool(self._custom_check(execution, expected_state or {}))
+                    match = verified
+                    verification_status = (
+                        VerificationStatus.VERIFICATION_SUCCEEDED if verified
+                        else VerificationStatus.VERIFICATION_FAILED
+                    )
+                    message_parts.append("custom check passed" if verified else "custom check failed")
+                except Exception as exc:
+                    verified = False
+                    match = False
+                    verification_status = VerificationStatus.VERIFICATION_FAILED
+                    message_parts.append(f"custom check error: {exc}")
+            elif expected_state is not None:
+                # State comparison available
+                actual = actual_state if actual_state is not None else (execution.data or {})
+                match = self._states_match(expected_state, actual)
+                verified = match  # Only verified if state actually matches
+                verification_status = (
+                    VerificationStatus.VERIFICATION_SUCCEEDED if verified
+                    else VerificationStatus.VERIFICATION_FAILED
+                )
+                message_parts.append("state matched" if match else "state mismatch")
+            else:
+                # No independent verification mechanism
+                verification_status = VerificationStatus.VERIFICATION_UNAVAILABLE
+                verified = False  # Cannot verify without independent evidence
+                match = False
+                message_parts.append("no independent verification mechanism available")
 
         record = VerificationRecord(
             execution_id=execution.execution_id,
             action=execution.action,
+            verification_status=verification_status.value,
             verified=verified,
             expected_state=expected_state,
             actual_state=actual_state,

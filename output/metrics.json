@@ -1,0 +1,86 @@
+{
+  "session_id": "demo-session",
+  "inference": {
+    "total_requests": 20,
+    "successful": 20,
+    "failed": 0,
+    "error_rate": 0.0,
+    "avg_latency_ms": 0.6268024444580078,
+    "median_latency_ms": 0.0,
+    "p95_latency_ms": 1.2306690216064484,
+    "p99_latency_ms": 4.6763324737548775,
+    "throughput_per_sec": 66.90376382162842
+  },
+  "gesture": {
+    "total_gestures": 10,
+    "distribution": {
+      "OPEN_PALM": 4,
+      "FIST": 2,
+      "VICTORY": 2,
+      "UNKNOWN": 1,
+      "THUMBS_UP": 1
+    },
+    "unknown_count": 1,
+    "unknown_rate": 0.1,
+    "avg_confidence": 0.8110000000000002,
+    "median_confidence": 0.9,
+    "num_transitions": 6,
+    "transitions": [
+      [
+        "UNKNOWN",
+        "OPEN_PALM"
+      ],
+      [
+        "OPEN_PALM",
+        "FIST"
+      ],
+      [
+        "FIST",
+        "VICTORY"
+      ],
+      [
+        "VICTORY",
+        "UNKNOWN"
+      ],
+      [
+        "UNKNOWN",
+        "THUMBS_UP"
+      ],
+      [
+        "THUMBS_UP",
+        "OPEN_PALM"
+      ]
+    ],
+    "cooldown_suppressions": 1
+  },
+  "agent": {
+    "total_observations": 6,
+    "decisions_by_type": {
+      "pause": 2,
+      "resume": 1,
+      "noop": 1,
+      "update_visualization": 1,
+      "request_verification": 1
+    },
+    "avg_decision_latency_ms": 6.763696099174628,
+    "median_decision_latency_ms": 7.090881792423282,
+    "p95_decision_latency_ms": 7.791490598384117,
+    "actions_requested": 6,
+    "actions_approved": 6,
+    "actions_rejected": 0,
+    "executions_succeeded": 6,
+    "executions_failed": 0,
+    "execution_success_rate": 1.0,
+    "verification_failures": 1
+  },
+  "resources": {
+    "cpu_percent": 23.9,
+    "ram_percent": 93.5,
+    "ram_available_mb": 490.6796875,
+    "process_memory_mb": 539.0859375,
+    "disk_percent": 95.7,
+    "gpu_available": false,
+    "gpu_utilization": null,
+    "gpu_memory_mb": null
+  }
+}

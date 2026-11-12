@@ -1,0 +1,97 @@
+[
+  {
+    "event_id": "773f3657-002f-4610-810e-5ecc2342d848",
+    "timestamp": "2026-11-11T15:15:50.495530+00:00",
+    "gesture": "OPEN_PALM",
+    "hand": "Right",
+    "confidence": 0.9,
+    "landmarks": null,
+    "bbox": [
+      100,
+      100,
+      300,
+      400
+    ],
+    "prev_gesture": "UNKNOWN",
+    "curr_gesture": "OPEN_PALM",
+    "metadata": {
+      "source": "demo"
+    }
+  },
+  {
+    "event_id": "51c025e4-98f3-4fc2-9e83-0d75bb484209",
+    "timestamp": "2026-11-11T15:15:50.495530+00:00",
+    "gesture": "OPEN_PALM",
+    "hand": "Right",
+    "confidence": 0.9,
+    "landmarks": null,
+    "bbox": [
+      100,
+      100,
+      300,
+      400
+    ],
+    "prev_gesture": "OPEN_PALM",
+    "curr_gesture": "OPEN_PALM",
+    "metadata": {
+      "source": "demo"
+    }
+  },
+  {
+    "event_id": "7d83b51e-49c0-4f79-a1b0-16dcdda12c0b",
+    "timestamp": "2026-11-11T15:15:50.495530+00:00",
+    "gesture": "FIST",
+    "hand": "Right",
+    "confidence": 0.9,
+    "landmarks": null,
+    "bbox": [
+      100,
+      100,
+      300,
+      400
+    ],
+    "prev_gesture": "OPEN_PALM",
+    "curr_gesture": "FIST",
+    "metadata": {
+      "source": "demo"
+    }
+  },
+  {
+    "event_id": "20dde3c2-b706-4390-b8a2-a8b904f7e425",
+    "timestamp": "2026-11-11T15:15:50.495530+00:00",
+    "gesture": "FIST",
+    "hand": "Right",
+    "confidence": 0.9,
+    "landmarks": null,
+    "bbox": [
+      100,
+      100,
+      300,
+      400
+    ],
+    "prev_gesture": "FIST",
+    "curr_gesture": "FIST",
+    "metadata": {
+      "source": "demo"
+    }
+  },
+  {
+    "event_id": "af992640-1827-4f4d-9173-e39c04267b99",
+    "timestamp": "2026-11-11T15:15:50.495530+00:00",
+    "gesture": "VICTORY",
+    "hand": "Right",
+    "confidence": 0.9,
+    "landmarks": null,
+    "bbox": [
+      100,
+      100,
+      300,
+      400
+    ],
+    "prev_gesture": "FIST",
+    "curr_gesture": "VICTORY",
+    "metadata": {
+      "source": "demo"
+    }
+  }
+]

@@ -99,6 +99,38 @@ def test_agent_decide_unknown():
     assert data["selected_action"] == "noop"
 
 
+def test_agent_decide_confidence_out_of_range():
+    """Test POST /agent/decide rejects confidence outside [0, 1]."""
+    client = TestClient(app)
+    for bad_conf in [-0.1, 1.5]:
+        response = client.post(
+            "/agent/decide",
+            json={
+                "observation_source": "test",
+                "observation_type": "gesture",
+                "data": {"gesture": "OPEN_PALM"},
+                "confidence": bad_conf,
+            },
+        )
+        assert response.status_code == 422, f"confidence {bad_conf} should be rejected"
+
+
+def test_agent_decide_confidence_in_range():
+    """Test POST /agent/decide accepts confidence within [0, 1]."""
+    client = TestClient(app)
+    for good_conf in [0.0, 0.5, 1.0]:
+        response = client.post(
+            "/agent/decide",
+            json={
+                "observation_source": "test",
+                "observation_type": "gesture",
+                "data": {"gesture": "OPEN_PALM"},
+                "confidence": good_conf,
+            },
+        )
+        assert response.status_code == 200, f"confidence {good_conf} should be accepted"
+
+
 def test_api_config_defaults():
     """Test API config loading."""
     config = load_api_config()
