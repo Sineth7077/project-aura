@@ -61,13 +61,23 @@ def test_config_from_env(monkeypatch):
     assert config.colab.gpu_enabled is True
 
 
-def test_colab_config_defaults():
-    """Verify ColabConfig defaults."""
-    config = ColabConfig()
-    assert config.runtime_type == "local"
-    assert config.tpu_enabled is False
-    assert config.mount_drive is False
-    assert config.gdrive_mount_path == "/content/drive"
+def test_colab_config_defaults(monkeypatch):
+    """Verify ColabConfig defaults under explicitly simulated local conditions."""
+    # Simulate absence of ALL Colab detection signals.
+    old_module = sys.modules.pop("google.colab", None)
+    monkeypatch.delenv("COLAB_GPU", raising=False)
+    monkeypatch.delenv("COLAB_RELEASE_TAG", raising=False)
+    monkeypatch.delenv("COLAB_RUNTIME", raising=False)
+    monkeypatch.delenv("COLAB_TPU_ADDR", raising=False)
+    try:
+        config = ColabConfig()
+        assert config.runtime_type == "local"
+        assert config.tpu_enabled is False
+        assert config.mount_drive is False
+        assert config.gdrive_mount_path == "/content/drive"
+    finally:
+        if old_module is not None:
+            sys.modules["google.colab"] = old_module
 
 
 # --- Auto-detection tests ---
@@ -75,15 +85,19 @@ def test_colab_config_defaults():
 
 def test_detect_colab_returns_false_locally():
     """_detect_colab should return False when not running in Colab."""
-    # Ensure google.colab is not in sys.modules
-    sys.modules.pop("google.colab", None)
-    # Ensure COLAB_GPU is not set
-    old_val = os.environ.pop("COLAB_GPU", None)
+    # Simulate absence of ALL Colab detection signals.
+    old_module = sys.modules.pop("google.colab", None)
+    old_gpu = os.environ.pop("COLAB_GPU", None)
+    old_tag = os.environ.pop("COLAB_RELEASE_TAG", None)
     try:
         assert _detect_colab() is False
     finally:
-        if old_val is not None:
-            os.environ["COLAB_GPU"] = old_val
+        if old_module is not None:
+            sys.modules["google.colab"] = old_module
+        if old_gpu is not None:
+            os.environ["COLAB_GPU"] = old_gpu
+        if old_tag is not None:
+            os.environ["COLAB_RELEASE_TAG"] = old_tag
 
 
 def test_detect_colab_returns_true_when_module_present(monkeypatch):
@@ -163,11 +177,17 @@ def test_colab_config_runtime_type_colab(monkeypatch):
 
 def test_colab_config_runtime_type_local(monkeypatch):
     """When not in Colab and COLAB_RUNTIME not set, runtime_type should be 'local'."""
-    sys.modules.pop("google.colab", None)
-    monkeypatch.delenv("COLAB_RUNTIME", raising=False)
+    # Simulate absence of ALL Colab detection signals.
+    old_module = sys.modules.pop("google.colab", None)
     monkeypatch.delenv("COLAB_GPU", raising=False)
-    config = ColabConfig()
-    assert config.runtime_type == "local"
+    monkeypatch.delenv("COLAB_RELEASE_TAG", raising=False)
+    monkeypatch.delenv("COLAB_RUNTIME", raising=False)
+    try:
+        config = ColabConfig()
+        assert config.runtime_type == "local"
+    finally:
+        if old_module is not None:
+            sys.modules["google.colab"] = old_module
 
 
 def test_load_config_returns_aura_config():
