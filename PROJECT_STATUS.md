@@ -24,7 +24,7 @@ deployed to a production hosting service.
 - Working tree contains completed changes (uncommitted; push requires approval)
 
 ### Folder Structure
-- `notebooks/` — 8 Colab notebooks (01–08)
+- `notebooks/` — 9 Colab notebooks (01–09)
 - `src/` — Production source code (core, vision, agents, api, monitoring, dashboard)
 - `tests/` — Pytest test suite
 - `deploy/` — CPU-compatible Dockerfile + requirements
@@ -44,7 +44,7 @@ deployed to a production hosting service.
 - `src/dashboard/` — optional Streamlit app
 
 ### Test Suite (`tests/`)
-- 157 tests, all passing (pytest)
+- 159 tests, all passing (pytest)
 - Coverage: config, exceptions, preprocessing, inference, model_service,
   gesture recognition, gesture smoothing, agent observation, agent decision,
   agent permissions, agent executor, agent pipeline, orchestrator, monitoring,
@@ -61,6 +61,7 @@ deployed to a production hosting service.
 | 06 Autonomous AI Agent | Complete | Executed end-to-end (0 errors); full decision trace |
 | 07 Deployment Preparation | Complete | Executed end-to-end (0 errors); FastAPI + Docker prep |
 | 08 Monitoring & Analytics | Complete | Executed end-to-end (0 errors); metrics + visualizations + export |
+| 09 Live Vision Testing | Complete | Statically valid; Phase 2 live vision testing (webcam, YOLO, gesture, agent, performance) |
 
 Notebooks 05–08 were executed end-to-end in this environment with zero error
 outputs. MediaPipe hand tracking is unavailable in this environment
@@ -88,6 +89,6 @@ offline with synthetic/provided landmarks.
 
 ## Metrics
 - Source modules: ~35 files
-- Test files: 18 files, 157 tests (all passing)
-- Notebook files: 8 canonical (all statically valid; 05–08 executed)
-- Documentation: README, ARCHITECTURE, ROADMAP, STATUS, agents.md
+- Test files: 18 files, 159 tests (all passing)
+- Notebook files: 9 canonical (all statically valid; 05–08 executed; 09 statically valid)
+- Documentation: README, ARCHITECTURE, ROADMAP, STATUS, agents.md, PHASE2_INTEGRATION_MAP

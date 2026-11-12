@@ -98,7 +98,7 @@ project-aura/
    sys.path.append('/content/project-aura')
    ```
 4. Open any notebook from `notebooks/` and run it.
-   Notebooks should be executed in order: 01 → 02 → 03 → 04 → 05 → 06 → 07 → 08.
+   Notebooks should be executed in order: 01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09.
    Each notebook runs independently from top to bottom.
 5. Add environment variables to Colab Secrets (keys match `.env.example`).
 
@@ -147,10 +147,12 @@ streamlit run src/dashboard/app.py
 | 06 | `06_ai_agents.ipynb` | Autonomous agent pipeline, decision trace |
 | 07 | `07_deployment_prep.ipynb` | FastAPI backend, schemas, Docker prep |
 | 08 | `08_monitoring_analytics.ipynb` | Logging, metrics, analytics, visualizations, export |
+| 09 | `09_live_vision_testing.ipynb` | Live vision testing: webcam, YOLO, gesture, agent, performance |
 
 Notebooks 05–08 have been executed end-to-end in a supported environment with
-zero error outputs. Notebooks 01–04 were previously executed. All notebooks are
-statically valid (JSON + code-cell syntax) and run independently.
+zero error outputs. Notebooks 01–04 were previously executed. Notebook 09 is
+statically valid. All notebooks are statically valid (JSON + code-cell syntax)
+and run independently.
 
 ## Source Modules
 
